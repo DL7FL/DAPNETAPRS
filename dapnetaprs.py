@@ -17,21 +17,15 @@
 # Date: 11.05.2017
 # Version 1.1
 
-import aprslib
 import logging
 import time
 from time import sleep
 from datetime import datetime
-from aprslib.packets.base import APRSPacket
-from aprslib.util import latitude_to_ddm, longitude_to_ddm, comment_altitude
 import urllib3
 import json
-import base64
-import math
 import sys
 import configparser
 import os
-import MySQLdb
 
 logging.basicConfig(filename='dapnet.log',level=logging.CRITICAL)
 
@@ -61,69 +55,69 @@ hampagerpassword = cfg.get('user','password')
 hampagerurl = cfg.get('dapnet','baseurl') + cfg.get('dapnet','trxurl')
 
 #APRS-IS credentials and settings are read from the config file
-aprsisusername = cfg.get('aprsis','username')
-aprsispassword = cfg.get('aprsis','password')
-aprsissourcecallsign = cfg.get('aprsis','sourcecall')
+#aprsisusername = cfg.get('aprsis','username')
+#aprsispassword = cfg.get('aprsis','password')
+#aprsissourcecallsign = cfg.get('aprsis','sourcecall')
 
 #read settings to access masking database
-maskserver = cfg.get('maskdb','server')
-maskuser = cfg.get('maskdb','username')
-maskpasswd = cfg.get('maskdb','passwd')
-maskdatabase = cfg.get('maskdb','database')
+#maskserver = cfg.get('maskdb','server')
+#maskuser = cfg.get('maskdb','username')
+#maskpasswd = cfg.get('maskdb','passwd')
+#maskdatabase = cfg.get('maskdb','database')
 
 #open database connection
-try:
-	db = MySQLdb.connect(host=maskserver,user=maskuser,passwd=maskpasswd,db=maskdatabase)
-except:
-	#can't connect to database, bail out
-	logger.error('No connection to masking database')
-	sys.exit()
+#try:
+#	db = MySQLdb.connect(host=maskserver,user=maskuser,passwd=maskpasswd,db=maskdatabase)
+#except:
+#	#can't connect to database, bail out
+#	logger.error('No connection to masking database')
+#	sys.exit()
 
 #read entries from masking database
-cur = db.cursor()
-cur.execute("SELECT MASK_CALL FROM masktable")
+#cur = db.cursor()
+#cur.execute("SELECT MASK_CALL FROM masktable")
 excl_result = cur.fetchall()
 excl_list = []
 for row in excl_result:
 	excl_list.append(row[0])
 
 #create a PHG code using TRX power, antenna height and antenna gain from DAPNET data
-def encodePHG (power, height, gain, dir):
-	p = round(math.sqrt(power))
-	if p > 9:
-		p = 9
-	if height <= 0:
-		h = 0
-	else:
-	    h = round(math.log(height/10/0.3048,2))
-	if h > 9:
-		h = 9	
-	g = round(gain)
-	if g > 9:
-		g = 9
-	if dir <= -1:
-		d = 0
-	else:
-		d = round(dir/45)
-	if d > 9:
-		d = 9
-	return ('PHG' + "{:.0f}".format(p) + "{:.0f}".format(h) + "{:.0f}".format(g) + "{:.0f}".format(d))
+#def encodePHG (power, height, gain, dir):
+#	p = round(math.sqrt(power))
+#	if p > 9:
+#		p = 9
+#	if height <= 0:
+#		h = 0
+#	else:
+#	    h = round(math.log(height/10/0.3048,2))
+#	if h > 9:
+#		h = 9
+#	g = round(gain)
+#	if g > 9:
+#		g = 9
+#	if dir <= -1:
+#		d = 0
+#	else:
+#		d = round(dir/45)
+#	if d > 9:
+#		d = 9
+#	return ('PHG' + "{:.0f}".format(p) + "{:.0f}".format(h) + "{:.0f}".format(g) + "{:.0f}".format(d))
 
 
 #open the link to APRS-IS. If connnection can't be established, print warning to console, print warning to error log and bail out
-AIS = aprslib.IS(aprsisusername, passwd=aprsispassword, port=14580)
-try:
-	AIS.connect()
-except:
-	print('Invalid APRS credentials')
-	logger.error('Invalid APRS credentials')
-	sys.exit(0)
-else:
+#AIS = aprslib.IS(aprsisusername, passwd=aprsispassword, port=14580)
+#try:
+#	AIS.connect()
+#except:
+#	print('Invalid APRS credentials')
+#	logger.error('Invalid APRS credentials')
+#	sys.exit(0)
+#else:
 	#connection to APRS-IS has been established, now continue
 	
-	#create the complete URL to send to DAPNET
-	http = urllib3.PoolManager()
-	headers = urllib3.util.make_headers(basic_auth= hampagerusername + ':' + hampagerpassword)
+#create the complete URL to send to DAPNET
+http = urllib3.PoolManager()
+headers = urllib3.util.make_headers(basic_auth= hampagerusername + ':' + hampagerpassword)
 
 try:
 	#try to establish connection to DAPNET
